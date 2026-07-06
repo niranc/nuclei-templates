@@ -14,13 +14,39 @@ info:
     cpe: cpe:2.3:a:minio:minio:*:*:*:*:*:*:*:*
   metadata:
     verified: true
-    max-request: 2
-    shodan-query: http.html:"symfony Profiler"
+    max-request: 3
+    shodan-query: title:"MinIO Console"
     product: minio
     vendor: minio
   tags: default-login,minio,vuln
 
 http:
+  - raw:
+      - |
+        POST /api/v1/login HTTP/1.1
+        Host: {{Hostname}}
+        Content-Type: application/json
+
+        {"accessKey":"{{username}}","secretKey":"{{password}}"}
+
+    payloads:
+      username:
+        - minioadmin
+      password:
+        - minioadmin
+    attack: pitchfork
+
+    matchers-condition: and
+    matchers:
+      - type: status
+        status:
+          - 204
+
+      - type: word
+        part: header
+        words:
+          - "Set-Cookie: token="
+
   - raw:
       - |
         POST /minio/webrpc HTTP/1.1
@@ -41,6 +67,7 @@ http:
       password:
         - minioadmin
     attack: pitchfork
+    stop-at-first-match: true
 
     matchers-condition: and
     matchers:
@@ -59,4 +86,3 @@ http:
       - type: status
         status:
           - 200
-# digest: 490a0046304402201d7565d66c1faae0380b56ef5ec72f58fc51643879d584b85aca210b9541c85b02206bbc72d60c297b273592f8cd8a61106757c78c141521222046a14e2ef156a436:922c64590222798bb761d5b6d8e72950
